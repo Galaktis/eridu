@@ -1,0 +1,16 @@
+<!-- Eridu: a branch in the colors of added, modified and deleted files -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <linearGradient id="link" gradientUnits="userSpaceOnUse" x1="3.25" y1="2.85" x2="6.48" y2="12.53"><stop offset="0" stop-color="#a3afc6"/><stop offset="1" stop-color="#5d6a85"/></linearGradient>
+    <linearGradient id="added" x1="0" y1="0" x2="0.34" y2="0.94"><stop offset="0" stop-color="#9df0bd"/><stop offset="1" stop-color="#2fb862"/></linearGradient>
+    <linearGradient id="modified" x1="0" y1="0" x2="0.34" y2="0.94"><stop offset="0" stop-color="#9fd0ff"/><stop offset="1" stop-color="#3d84e8"/></linearGradient>
+    <linearGradient id="deleted" x1="0" y1="0" x2="0.34" y2="0.94"><stop offset="0" stop-color="#ffa8a0"/><stop offset="1" stop-color="#e04848"/></linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#link)" stroke-width="1.9" stroke-linecap="round">
+    <path d="M4.2 12.2 L4.2 3.8"/>
+    <path d="M4.2 10.0 Q11.8 10.0 11.8 5.4"/>
+  </g>
+  <circle cx="4.2" cy="12.2" r="2.9" fill="url(#added)"/>
+  <circle cx="4.2" cy="3.8" r="2.9" fill="url(#modified)"/>
+  <circle cx="11.8" cy="5.4" r="2.9" fill="url(#deleted)"/>
+</svg>

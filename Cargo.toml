@@ -1,0 +1,84 @@
+[package]
+name = "eridu"
+version = "0.1.0"
+authors = ["Galaktis"]
+edition = "2024"
+description = "The Epic of your Repository — a Git history visualizer"
+license = "MIT"
+homepage = "https://eridu.galaktis.eu"
+repository = "https://github.com/Galaktis/eridu"
+readme = "README.md"
+keywords = ["git", "visualization", "history", "gource", "bevy"]
+categories = ["visualization", "development-tools", "command-line-utilities"]
+# Not needed to build: docs, the icon generator, the screenshot script, packaging templates.
+exclude = ["docs/", "tools/", "packaging/", ".github/", "AGENTS.md", "RELEASING.md"]
+
+# `cargo binstall eridu` downloads the GitHub release's archive instead of compiling Bevy.
+# The names follow `.github/workflows/release.yml`.
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-{ target-family }{ archive-suffix }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-windows-x86_64.zip"
+pkg-fmt = "zip"
+bin-dir = "{ name }-{ version }-windows-x86_64/{ bin }{ binary-ext }"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-linux-x86_64.tar.gz"
+bin-dir = "{ name }-{ version }-linux-x86_64/{ bin }"
+
+# One universal binary for both Macs.
+[package.metadata.binstall.overrides.aarch64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-macos-universal.tar.gz"
+bin-dir = "{ name }-{ version }-macos-universal/{ bin }"
+
+[package.metadata.binstall.overrides.x86_64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ version }-macos-universal.tar.gz"
+bin-dir = "{ name }-{ version }-macos-universal/{ bin }"
+
+[dependencies]
+# Only what Eridu uses: no audio, gamepads, glTF, scenes or sprites (a smaller binary, and no
+# ALSA or udev needed on Linux).
+bevy = { version = "0.20", default-features = false, features = [
+    # App and platform.
+    "default_app", "std", "multi_threaded", "bevy_winit", "bevy_window", "x11", "wayland",
+    # The 3D scene, bloom, tonemapping (its lookup tables are zstd-compressed) and gizmo lines.
+    "bevy_render", "bevy_core_pipeline", "bevy_pbr", "bevy_light", "bevy_post_process",
+    "bevy_gizmos", "bevy_gizmos_render", "tonemapping_luts", "zstd_rust",
+    "bevy_camera", "bevy_color", "bevy_image", "bevy_mesh", "bevy_shader", "bevy_material",
+    # The HUD, avatars and their hovering.
+    "bevy_ui", "bevy_ui_render", "bevy_text", "bevy_picking", "ui_picking",
+    # Avatars (GitHub serves some as GIFs), --logo and --background images.
+    "png", "jpeg", "gif",
+    # Not used directly, but without them frames took ~1 ms longer on the bench (p50 7.9 vs
+    # 6.7 ms, two runs each); they cost 4 MB. Which one matters wasn't pinned down.
+    "bevy_anti_alias", "default_font", "hdr", "smaa_luts", "webgl2", "mesh_picking", "sprite_picking",
+    "bevy_input_focus", "bevy_ui_widgets", "custom_cursor", "sysinfo_plugin", "bevy_clipboard",
+] }
+bytemuck = { version = "1", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+ureq = { version = "3", features = ["platform-verifier"] }
+# The version Bevy uses, for the window icon (Bevy doesn't re-export it).
+winit = { version = "0.30", default-features = false }
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+# A game engine needs optimized code to run smoothly, even in dev builds: dependencies fully
+# optimized, our own code a little (it keeps compiling fast).
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# The binaries we ship (`cargo build --profile dist`): slower to build, smaller and a little faster.
+# Day-to-day work stays on `release`.
+[profile.dist]
+inherits = "release"
+lto = "thin"
+codegen-units = 1
+strip = true

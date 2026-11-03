@@ -1,0 +1,16 @@
+# Weekly pull requests for outdated crates and GitHub Actions. Bevy's breaking releases come
+# as their own pull request, to migrate by hand.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      crates:
+        patterns: ["*"]
+        exclude-patterns: ["bevy"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,2 @@
+# rustfmt defaults; only the line endings are pinned, so Windows and CI agree.
+newline_style = "Unix"

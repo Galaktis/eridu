@@ -1,0 +1,5 @@
+# LF everywhere in the repository (binaries are detected and left alone).
+* text=auto eol=lf
+*.ico binary
+*.png binary
+*.ttf binary

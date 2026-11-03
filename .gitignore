@@ -1,0 +1,5 @@
+/target
+tools/.cache/
+__pycache__/
+# Machine-specific notes for coding agents.
+AGENTS.local.md

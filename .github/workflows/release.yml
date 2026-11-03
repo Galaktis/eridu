@@ -1,0 +1,98 @@
+# Pushing a version tag (`git tag v1.0.0 && git push origin v1.0.0`) builds Eridu for Windows,
+# Linux and macOS (Apple silicon and Intel, as one universal binary) and attaches the archives
+# to a draft GitHub release, to check and publish by hand. Run by hand (Actions → Release → Run
+# workflow), it only builds the archives, downloadable from the run: a way to try them first.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-x86_64
+          - os: ubuntu-22.04 # an older glibc, so the binary runs on more distributions
+            name: linux-x86_64
+          - os: macos-14
+            name: macos-universal
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The tag matches Cargo.toml's version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          crate=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
+          [ "v$crate" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME, but Cargo.toml says $crate"; exit 1; }
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ startsWith(matrix.os, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.name }}
+      - name: Linux libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libx11-dev libxkbcommon-dev libwayland-dev
+
+      - name: Build (Windows, Linux)
+        if: runner.os != 'macOS'
+        run: cargo build --profile dist
+        env:
+          # The C runtime linked in, so the .exe runs without the VC++ Redistributable.
+          RUSTFLAGS: ${{ runner.os == 'Windows' && '-C target-feature=+crt-static' || '' }}
+      - name: Build (macOS, both architectures)
+        if: runner.os == 'macOS'
+        run: |
+          cargo build --profile dist --target aarch64-apple-darwin
+          cargo build --profile dist --target x86_64-apple-darwin
+          mkdir -p target/dist
+          lipo -create -output target/dist/eridu target/aarch64-apple-darwin/dist/eridu target/x86_64-apple-darwin/dist/eridu
+
+      - name: Package
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          version="${version//\//-}"
+          folder="eridu-$version-${{ matrix.name }}"
+          mkdir "$folder"
+          cp LICENSE README.md "$folder/"
+          if [ "$RUNNER_OS" = Windows ]; then
+            cp target/dist/eridu.exe "$folder/"
+            7z a "$folder.zip" "$folder" > /dev/null
+            echo "ARCHIVE=$folder.zip" >> "$GITHUB_ENV"
+          else
+            cp target/dist/eridu "$folder/"
+            tar czf "$folder.tar.gz" "$folder"
+            echo "ARCHIVE=$folder.tar.gz" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ env.ARCHIVE }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+      - name: Checksums
+        run: sha256sum eridu-* > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            eridu-*
+            SHA256SUMS.txt
