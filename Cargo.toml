@@ -1,6 +1,6 @@
 [package]
 name = "eridu"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Galaktis"]
 edition = "2024"
 description = "The Epic of your Repository — a Git history visualizer"
