@@ -28,7 +28,10 @@ Website: **[eridu.galaktis.eu](https://eridu.galaktis.eu)**.
 
 ## Install
 
-Download the archive for your system from the
+With Rust: `cargo binstall eridu` (downloads the prebuilt binary), or `cargo install eridu`
+(compiles it, which takes a while; see *From the sources* below for Linux's packages).
+
+Or download the archive for your system from the
 [releases](https://github.com/Galaktis/eridu/releases), unpack it and run `eridu` from a terminal.
 It needs `git` on the `PATH` (and [ffmpeg](https://ffmpeg.org) only to record videos).
 
