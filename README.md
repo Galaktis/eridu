@@ -28,6 +28,8 @@ Website: **[eridu.galaktis.eu](https://eridu.galaktis.eu)**.
 
 ## Install
 
+macOS, Linux: `brew install galaktis/tap/eridu`.
+
 With Rust: `cargo binstall eridu` (downloads the prebuilt binary), or `cargo install eridu`
 (compiles it, which takes a while; see *From the sources* below for Linux's packages).
 
